@@ -1,0 +1,291 @@
+{
+  "name": "RAG Website Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9ad85548-070e-427b-82f6-e358eccb24d2",
+      "name": "When chat message received",
+      "webhookId": "04326582-9b1b-4b30-96e9-efdee56052f1"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a website support agent\nyou have a no if tool at disposal\nsend email = \nRAG_QUESTION = USE THIS TOOL TO \nproduct queston ="
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "b15ef233-38cf-4998-9d38-3558324cdd92",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        60,
+        200
+      ],
+      "id": "709afba7-e88a-4ae2-91b1-c8a20459d088",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "TaANRqq6nToB9lfy",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        180,
+        220
+      ],
+      "id": "2b01e7fe-193f-4b11-94b2-906785231a38",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "9G5SAbjl7l8j0acm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        380,
+        260
+      ],
+      "id": "ac8509e2-4fec-4391-835b-25102d5939c0",
+      "name": "Gmail",
+      "webhookId": "36024ffd-3b7e-43e3-9aec-79429cec05ea",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sew9rD8jzfmvol9W",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "use this tool to answer general querres",
+        "method": "POST",
+        "url": "https://prod-1-data.ke.pinecone.io/assistant/chat/awaisn8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Key",
+              "value": "pcsk_2AvkYJ_HHcJVQhrRT5MUg6yCmbg7p3ps1szJ8BhrK6duTsrJVivCoTD1KqYbmj9HBt9Djx"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Pinecone-API-Version",
+              "value": "2025-04"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"RAG_QUESTIONS\"\n    }\n  ],\n  \"stream\": false,\n  \"model\": \"gpt-4o\",\n  \"include_highlights\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        280
+      ],
+      "id": "ef1df8cc-18d3-4883-a81f-258c4941820e",
+      "name": "RAG QUESTION"
+    },
+    {
+      "parameters": {
+        "toolDescription": "USE THIS TOOL TO FOR QUESTION ABOU TPROJECT AND PRODUCT SPACE",
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <token>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"sonar\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Be precise and concise.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"How many stars are there in our galaxy?\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        340
+      ],
+      "id": "1c5ae09d-45d0-41ab-8f51-afec10c948bf",
+      "name": "Product question"
+    },
+    {
+      "parameters": {
+        "toolDescription": "USE THIS TOOL TO FOR QUESTION ABOU TPROJECT AND PRODUCT SPACE",
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <token>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"sonar\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Be precise and concise.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"How many stars are there in our galaxy?\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        340
+      ],
+      "id": "cd4cb728-7bc0-4f64-b99a-741401027aec",
+      "name": "Product question1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RAG QUESTION": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product question": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product question1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ebaff1ce-691d-4141-a815-17fc67ab77bb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fe4330923316e989c2e392cfb5f15237cc27499946cf6f95ffb01e247b125dff"
+  },
+  "id": "IAbPnZZjXjcWVpsf",
+  "tags": []
+}

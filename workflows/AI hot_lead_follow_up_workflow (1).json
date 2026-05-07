@@ -1,0 +1,841 @@
+{
+  "name": "AI hot_lead_follow_up_workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hot-lead-trigger",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Start Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1380,
+        100
+      ],
+      "id": "3481eb08-9081-4371-96cf-3db994e3c28a",
+      "webhookId": "e9421799-18a9-48fe-a075-6090fda7d801"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "leadId": "={{ $json.body.leadId }}"
+      },
+      "name": "Get Lead",
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        -20
+      ],
+      "id": "3018c9b3-70f6-4c6d-92e3-beca7bd7b43f",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "r1sbgMRUuWJC6Inz",
+          "name": "Salesforce account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "user",
+        "userId": "={{ $node[\"Get Lead\"].json[\"OwnerId\"] }}"
+      },
+      "name": "Get Loan Officer",
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        -1060,
+        100
+      ],
+      "id": "a83b746e-41d6-4cfd-b018-f09703813dbe",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "r1sbgMRUuWJC6Inz",
+          "name": "Salesforce account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "callCount",
+              "value": 1
+            },
+            {
+              "name": "maxCalls",
+              "value": 10
+            }
+          ],
+          "string": [
+            {
+              "name": "customerName",
+              "value": "={{ $node[\"Get Lead\"].json[\"Name\"] }}"
+            },
+            {
+              "name": "customerPhone",
+              "value": "={{ $node[\"Get Lead\"].json[\"Phone\"] }}"
+            },
+            {
+              "name": "customerEmail",
+              "value": "={{ $node[\"Get Lead\"].json[\"Email\"] }}"
+            },
+            {
+              "name": "loanOfficerName",
+              "value": "={{ $node[\"Get Loan Officer\"].json[\"Name\"] }}"
+            },
+            {
+              "name": "loanOfficerPhone",
+              "value": "={{ $node[\"Get Loan Officer\"].json[\"Phone\"] }}"
+            },
+            {
+              "name": "loanOfficerEmail",
+              "value": "={{ $node[\"Get Loan Officer\"].json[\"Email\"] }}"
+            },
+            {
+              "name": "status",
+              "value": "initialized"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Initialize Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        100
+      ],
+      "id": "2d8e1557-62c3-4148-82ae-407dd6312b48"
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+19546338102",
+        "to": "={{ $json.customerPhone }}",
+        "message": "={{ \"Hi \" + $json.customerName + \", this is Kia, assistant to \" + $json.loanOfficerName + \" from Iconic Mortgage. \" + $json.loanOfficerName + \" needs to speak with you about your mortgage inquiry. Can I connect you now or schedule a quick 10‑minute call?\" }}",
+        "options": {
+          "statusCallback": ""
+        }
+      },
+      "name": "Call Lead",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        100
+      ],
+      "id": "e6e473d9-e81e-4adc-9d36-c959e564c052",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['status'] }}",
+              "value2": "completed"
+            }
+          ]
+        }
+      },
+      "name": "Call Answered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        100
+      ],
+      "id": "1e2bf02e-6f08-430d-90a3-d7edac548ed8"
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+195463383102",
+        "to": "={{ $json.loanOfficerPhone }}",
+        "message": "={{ \"Hello \" + $json.loanOfficerName + \", this is Kia from Iconic Mortgage. I have \" + $json.customerName + \" on the line ready to discuss their mortgage application.\" }}",
+        "options": {}
+      },
+      "name": "Connect Officer",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -180
+      ],
+      "id": "5bf0b85e-2743-44a4-adfa-a89cb5f581ec",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "leadId": "={{ $node[\"Get Lead\"].json[\"Id\"] }}",
+        "updateFields": {
+          "status": "Hot - Contacted & Needs Follow Up"
+        }
+      },
+      "name": "Update Lead Status (Connected)",
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -180
+      ],
+      "id": "3ff9e55e-dafe-4dc8-b0fe-64f5c055ba6a",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "r1sbgMRUuWJC6Inz",
+          "name": "Salesforce account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+19546338102",
+        "to": "={{ $json.customerPhone }}",
+        "message": "Hi, this is Kia from Iconic Mortgage. Sorry we missed you! Just reaching out to help with your mortgage inquiry. Feel free to call us back or schedule a time that works for you. Thanks!",
+        "options": {}
+      },
+      "name": "Leave Voicemail",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        380
+      ],
+      "id": "c03aae5c-6950-4771-af72-19df4a65ef60",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+19546338102",
+        "to": "={{ $json.customerPhone }}",
+        "message": "={{ \"Hi \" + $json.customerName + \", this is Kia from Iconic Mortgage. We tried reaching you about your mortgage inquiry. Please call us back at \" + $json.loanOfficerPhone + \" or let me know a convenient time.\" }}",
+        "options": {}
+      },
+      "name": "Send SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        380
+      ],
+      "id": "9e64d014-adf3-470d-b776-dae2b56610ce",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "Wait for Next Attempt",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        540
+      ],
+      "id": "4a008e3c-f3e5-4e15-9346-8d3b162a21ea",
+      "webhookId": "64bf6ef2-9453-4eb6-8d74-d8b62874412b"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(item => {\n  item.json.callCount = (item.json.callCount || 0) + 1;\n  return item;\n});\n"
+      },
+      "name": "Increment Counter",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        160,
+        380
+      ],
+      "id": "33b17744-6fb6-47cc-b70c-9ce8a4579349"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.callCount }}",
+              "operation": "largerEqual",
+              "value2": "={{ $json.maxCalls }}"
+            }
+          ]
+        }
+      },
+      "name": "Check Maximum Attempts",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        380,
+        360
+      ],
+      "id": "1676a404-1364-41cc-8e53-2884b62e0380"
+    },
+    {
+      "parameters": {
+        "resource": "call",
+        "from": "+195463383102",
+        "to": "={{ $json.customerPhone }}",
+        "message": "={{ \"Hi \" + $json.customerName + \", this is Kia from Iconic Mortgage. I’ve been trying to reach you on behalf of \" + $json.loanOfficerName + \". This will be my final attempt—please call \" + $json.loanOfficerPhone + \" when you’re ready to move forward. Thank you.\" }}",
+        "options": {}
+      },
+      "name": "Final Voicemail",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        780,
+        320
+      ],
+      "id": "9df000d2-77eb-4dc4-b390-ac78369a9b8c",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "leadId": "={{ $node[\"Get Lead\"].json[\"Id\"] }}",
+        "updateFields": {
+          "status": "Cold - Over 5 Call Attempts"
+        }
+      },
+      "name": "Update Lead Status (Max Attempts)",
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        960,
+        320
+      ],
+      "id": "ff907b0f-571b-4f11-910b-da3c621530bc",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "r1sbgMRUuWJC6Inz",
+          "name": "Salesforce account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+195463383102",
+        "to": "={{ $json.loanOfficerPhone }}",
+        "message": "={{ \"Hi \" + $json.loanOfficerName + \", we’ve made \" + $json.maxCalls + \" attempts to reach \" + $json.customerName + \" with no success. The lead is now marked as 'Maximum Attempts Reached'.\" }}",
+        "options": {}
+      },
+      "name": "Notify Loan Officer",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        320
+      ],
+      "id": "c26fa8ca-f40a-4ce8-8ef8-d7acc23505bd",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "End",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        140
+      ],
+      "id": "32ea63b8-849f-47c5-a601-796c8388e72d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.schedule }}",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "name": "Check Schedule",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        300
+      ],
+      "id": "9c09c0a0-22b5-4eeb-9aef-fdbe819198b0"
+    },
+    {
+      "parameters": {
+        "url": "https://api.cal.com/v1/slots",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "apiKey",
+              "value": "cal_live_253294cf040676a65b409a410be3c373"
+            },
+            {
+              "name": "eventTypeId",
+              "value": "2833697"
+            },
+            {
+              "name": "start",
+              "value": "={{ new Date().toISOString().split('T')[0] + 'T00:00:00Z' }}"
+            },
+            {
+              "name": "end",
+              "value": "={{ new Date(new Date().getTime() + 7*24*60*60*1000).toISOString().split('T')[0] + 'T23:59:59Z' }}"
+            }
+          ]
+        }
+      },
+      "name": "Get Slots",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        100
+      ],
+      "id": "7dc522da-1571-4265-ae6e-8f1a3248aad0"
+    },
+    {
+      "parameters": {
+        "functionCode": "items[0].json.slotTimes = []\nconst slots = items[0].json.slots || {}\nfor (const date in slots) {\n  const arr = slots[date]\n  arr.forEach(slot => {\n    items[0].json.slotTimes.push(slot.time)\n  })\n}\nitems[0].json.slotTimes = items[0].json.slotTimes.slice(0, 3)\nreturn items;"
+      },
+      "name": "Extract Slots",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        160,
+        100
+      ],
+      "id": "550f6722-543d-45b4-a8ec-b95df1bd2fd8"
+    },
+    {
+      "parameters": {
+        "from": "+19546338102",
+        "to": "={{ $json.customerPhone }}",
+        "message": "={{ 'Hi ' + $json.customerName + ', here are some available times: ' + $json.slotTimes.join(', ') + '. Reply with your preferred time.' }}",
+        "options": {}
+      },
+      "name": "Send Scheduling Options",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        340,
+        100
+      ],
+      "id": "ca0f6edf-8726-487f-beef-5dc2b4d42a4e",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://api.cal.com/v1/bookings",
+        "options": {
+          "bodyContentType": "json"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "Body",
+              "value": "={\n  \"eventTypeId\": 2833697,\n  \"start\": \"={{ $json.slotTimes[0] }}\",\n\"end\": \"={{ new Date(new Date($json.slotTimes[0]).getTime() + 10 * 60 * 1000).toISOString() }}\",\n\n  \"responses\": {\n    \"name\": \"{{ $json.customerName }}\",\n    \"email\": \"{{ $json.customerEmail }}\"\n  },\n  \"timeZone\": \"America/Los_Angeles\",\n  \"language\": \"en\",\n  \"title\": \"Meeting with {{ $json.customerName }}\",\n  \"status\": \"PENDING\"\n}\n"
+            }
+          ]
+        },
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "apiKey",
+              "value": "=cal_live_253294cf040676a65b409a410be3c373"
+            }
+          ]
+        }
+      },
+      "name": "Create Booking",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        540,
+        100
+      ],
+      "id": "d1b16d17-e838-4787-9603-3dafecc92f44"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "leadId": "={{ $node[\"Get Lead\"].json[\"Id\"] }}",
+        "updateFields": {
+          "status": "Warm - Contact Attempted"
+        }
+      },
+      "name": "Update Lead Status (Scheduled)",
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        860,
+        120
+      ],
+      "id": "944a6959-42ac-4b1b-a274-81019902f09a",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "r1sbgMRUuWJC6Inz",
+          "name": "Salesforce account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+19546338102",
+        "to": "={{ $json.customerPhone }}",
+        "message": "={{ 'Hi ' + $json.customerName + ', your appointment has been scheduled. You will receive reminders before the call.' }}",
+        "options": {}
+      },
+      "name": "Send Confirmation",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        140
+      ],
+      "id": "00481b5c-1cc1-4af3-b4dd-d1986c1d7d15",
+      "credentials": {
+        "twilioApi": {
+          "id": "HM98loxOeBTL1e8s",
+          "name": "Twilio account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Lead": {
+      "main": [
+        [
+          {
+            "node": "Get Loan Officer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Loan Officer": {
+      "main": [
+        [
+          {
+            "node": "Initialize Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize Variables": {
+      "main": [
+        [
+          {
+            "node": "Call Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Lead": {
+      "main": [
+        [
+          {
+            "node": "Call Answered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Answered?": {
+      "main": [
+        [
+          {
+            "node": "Connect Officer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Connect Officer": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Status (Connected)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status (Connected)": {
+      "main": [
+        [
+          {
+            "node": "End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get Slots",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leave Voicemail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Slots": {
+      "main": [
+        [
+          {
+            "node": "Extract Slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Slots": {
+      "main": [
+        [
+          {
+            "node": "Send Scheduling Options",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Scheduling Options": {
+      "main": [
+        [
+          {
+            "node": "Create Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Booking": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Status (Scheduled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status (Scheduled)": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation": {
+      "main": [
+        [
+          {
+            "node": "End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leave Voicemail": {
+      "main": [
+        [
+          {
+            "node": "Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS": {
+      "main": [
+        [
+          {
+            "node": "Increment Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Increment Counter": {
+      "main": [
+        [
+          {
+            "node": "Check Maximum Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Maximum Attempts": {
+      "main": [
+        [
+          {
+            "node": "Final Voicemail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Next Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Next Attempt": {
+      "main": [
+        [
+          {
+            "node": "Call Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Voicemail": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Status (Max Attempts)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status (Max Attempts)": {
+      "main": [
+        [
+          {
+            "node": "Notify Loan Officer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Loan Officer": {
+      "main": [
+        [
+          {
+            "node": "End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "56d1ed30-2a17-4355-afb0-71e7b2e0e718",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2bcd10b1deb5e0ec3a0ab11b9bcaa385f17293ec899326647647e217440e071b"
+  },
+  "id": "wbSKLF6fq9U3SYT7",
+  "tags": []
+}

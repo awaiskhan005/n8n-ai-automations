@@ -1,0 +1,200 @@
+{
+  "name": "Email Sending Agent automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send_email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -64
+      ],
+      "id": "32b23abe-b99c-47b9-82a0-b3459e5fb0ee",
+      "name": "Webhook",
+      "webhookId": "5cf44bbc-c937-449d-a345-ae50a75aab3e"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "email for;\nemail content:",
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "845e8226-1180-4aad-b4f4-aa63c11d41ea",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        144
+      ],
+      "id": "ccb3925d-331e-4f7f-9135-68229726cfa2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "lmqKgBB0KMGUstmb",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lNHL2Fdub3sEErMkDTVhGmI2uA48dWw_VBKyxiL1qWM",
+          "mode": "list",
+          "cachedResultName": "Gmail",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lNHL2Fdub3sEErMkDTVhGmI2uA48dWw_VBKyxiL1qWM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lNHL2Fdub3sEErMkDTVhGmI2uA48dWw_VBKyxiL1qWM/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        96,
+        144
+      ],
+      "id": "dad53046-3592-4a93-b5e9-06421a2d745b",
+      "name": "contect data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "sn0FH3nsSdgr1C75",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        160
+      ],
+      "id": "0d584ee4-138d-43a8-aa1b-f1f29d83b2c6",
+      "name": "Send_email",
+      "webhookId": "32bdae71-f7bf-4f79-9434-96e3977b6d01",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "MWYAIWEiu2h72jSf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        288,
+        -64
+      ],
+      "id": "dd735ae8-82fd-4539-8281-6ee714ee95a4",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "contect data": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d8a0edd4-03f4-446f-b9a7-58df7ceb3ead",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4245c990d0aeb2dd533063cc4f3bc5c4ce3d653c5c6abd7b2213243e028fe11a"
+  },
+  "id": "Sa8Gklkn9pD2Al0t",
+  "tags": []
+}

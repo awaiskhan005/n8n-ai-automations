@@ -1,0 +1,415 @@
+{
+  "name": "AI Agent for youtube Video automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -912,
+        -96
+      ],
+      "id": "2b3bc581-91fd-4216-aef4-3d809de6ed36",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1SLXGxlSeI5zJMma6bNKDE83Ojuniqa78BOgJk80h5mM",
+          "mode": "list",
+          "cachedResultName": "AI Video Ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SLXGxlSeI5zJMma6bNKDE83Ojuniqa78BOgJk80h5mM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SLXGxlSeI5zJMma6bNKDE83Ojuniqa78BOgJk80h5mM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Todo",
+              "lookupValue": "Todo"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -704,
+        -80
+      ],
+      "id": "e91cd7f7-41cb-4cc0-aaf4-80aa3608b76b",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "sn0FH3nsSdgr1C75",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        144
+      ],
+      "id": "9e9ca7c7-db76-4182-ab70-2f29ef25d9c0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "lmqKgBB0KMGUstmb",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Video idea : {{ $json.Ideas }}",
+        "options": {
+          "systemMessage": "#System Prompt for AI Agent: Veo 3 Prompt Generator\nYou are an expert prompt engineer trained specifically for Google Veo 3, a cutting-edge video generation model.\nYour task is to take a short video idea (e.g., “ASMR cutting kiwi” or “bear walking through woods”) and turn it into a highly detailed, cinematic, and hyper-realistic prompt that maximizes visual quality and emotional engagement.\n\nOutput Requirements\nEach output should include:\n\nDescriptive setting\n— Environment, lighting, and atmosphere.\n\nPrecise visual details\n— Camera angle, textures, objects, and motion.\n\nViral appeal\n— Aesthetic beauty, emotional impact, or uniqueness.\n\nCinematic techniques\n— e.g., slow motion, macro lens, shallow depth of field, natural lighting.\n\nRules\nUse rich, visual, and specific language.\n\nAvoid vague or generic phrases.\n\nAlways optimize for realism, engagement, and clarity.\n\nDo not explain your prompt or include reasoning.\n\nOnly output the final Veo 3 prompt.\n\nExample Input\nIdea: “ASMR cutting kiwi”\n\nExample Output\nVeo Prompt:\nExtreme close-up of a ripe, juicy kiwi being sliced on a wooden cutting board, captured in ultra high-definition. Water droplets glisten on the fuzzy kiwi skin. Natural daylight from a nearby window highlights the translucent green flesh and black seeds as the knife smoothly cuts through with a crisp sound—modern kitchen sounds, no music. Soft focus background, macro lens, shallow depth of field, slow-motion shot at 120 fps to emphasize textures and juice movement. Designed for ASMR, visually and audibly satisfying."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        -96
+      ],
+      "id": "3df4779f-1720-4f50-943d-218fc0f17add",
+      "name": "Prompt agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/veo3/fast",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Key a3236f98-adf5-428d-b3c0-b41281967bfb:74af973f2b24c6c354f35393006f9162"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "9:16"
+            },
+            {
+              "name": "generate_audio",
+              "value": "false"
+            },
+            {
+              "name": "duration",
+              "value": "8s"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -112,
+        -96
+      ],
+      "id": "c3b63fbc-b2bb-45dd-a4e4-183f3def9203",
+      "name": "Generate video"
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        -112
+      ],
+      "id": "6ca3bf32-7660-49fb-8bdd-6e24b0359b9f",
+      "name": "Wait 3 Minutes",
+      "webhookId": "ae509217-214e-4564-ab51-0a126e3d5d36"
+    },
+    {
+      "parameters": {
+        "url": "https://queue.fal.run/fal-ai/veo3/requests/$REQUEST_ID",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Key a3236f98-adf5-428d-b3c0-b41281967bfb:74af973f2b24c6c354f35393006f9162"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        336,
+        -112
+      ],
+      "id": "d9d34315-f733-4b41-8c45-121a2a1f9ca7",
+      "name": "Get the video"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "regionCode": "PK",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -112
+      ],
+      "id": "83d97236-f779-4f80-b22b-dc6323c008f8",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "oJTdMfDGJzVQXM9A",
+          "name": "YouTube account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        -112
+      ],
+      "id": "b5973b06-770c-423e-b84e-5a0aa5f04e3a",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1SLXGxlSeI5zJMma6bNKDE83Ojuniqa78BOgJk80h5mM",
+          "mode": "list",
+          "cachedResultName": "AI Video Ideas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SLXGxlSeI5zJMma6bNKDE83Ojuniqa78BOgJk80h5mM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SLXGxlSeI5zJMma6bNKDE83Ojuniqa78BOgJk80h5mM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Todo": "done"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Ideas",
+              "displayName": "Ideas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Todo",
+              "displayName": "Todo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        896,
+        -112
+      ],
+      "id": "2502d638-5261-4c3e-9239-071fdea3227f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "sn0FH3nsSdgr1C75",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Prompt agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Prompt agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt agent": {
+      "main": [
+        [
+          {
+            "node": "Generate video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate video": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get the video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the video": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d863cb3f-11c1-450b-950b-f474ae6e1329",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4245c990d0aeb2dd533063cc4f3bc5c4ce3d653c5c6abd7b2213243e028fe11a"
+  },
+  "id": "SCbUYiajFKACHMSe",
+  "tags": []
+}

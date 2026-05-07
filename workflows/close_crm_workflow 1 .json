@@ -1,0 +1,732 @@
+{
+  "name": "Close.io CRM Text Response Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "text-response",
+        "responseMode": "responseNode"
+      },
+      "id": "d6e41f9c-0b6c-4c6c-9f4c-8a3b2e1d0c9f",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "contact_phone",
+              "name": "contact_phone",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "message_text", 
+              "name": "message_text",
+              "value": "={{ $json.body.toLowerCase().trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "lead_id",
+              "name": "lead_id", 
+              "value": "={{ $json.lead_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "current_workflow",
+              "name": "current_workflow",
+              "value": "={{ $json.current_workflow || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "current_lead_status",
+              "name": "current_lead_status",
+              "value": "={{ $json.current_lead_status || '' }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a5c3d2e1-9f8e-4d7c-b6a5-9483c2d1e0f9",
+      "name": "Extract Message Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        }
+      },
+      "id": "b7f4e6d8-1a2b-3c4d-5e6f-7890abcdef12",
+      "name": "Get Lead from Close",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "who is this|what company|who are you|who do you work for",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "identity_question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "what do you want|how can i help|what's up|what's this about|what do you need",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "purpose_question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "^(yes|yep|i own|maybe.*what.*want|how can i help)",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmation_response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "sold.*property|no longer own|i sold it|it's sold|we sold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "property_sold"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "not interested.*selling|not selling|not for sale|just looking.*tenant|just leasing|never had.*for sale",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "soft_no"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "selling.*ourselves|don't work with brokers|bring.*buyer.*pay|if you bring.*buyer|not looking to list|go sell it then|pay you.*buyer.*bring",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "not_interested_broker"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "already working.*broker|property is listed|talk to.*agent|have a broker|already listed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "already_listed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "under contract|in due diligence|in escrow|scheduled.*close|contract signed|closing soon",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "under_contract"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "do you have.*buyer|you have someone.*wants.*buy|represent.*buyer|have.*buyer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "buyer_question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "interest.*selling|yes please call|want to talk|call me",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "wants_to_talk"
+            }
+          ]
+        }
+      },
+      "id": "c8e5f7a9-2b3c-4d5e-6f70-8901bcdef234",
+      "name": "Message Classification",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"lead_id\": \"{{ $('Extract Message Data').item.json.lead_id }}\",\n  \"text\": \"Hi! This is Troy Golden, a commercial real estate broker. I specialize in helping property owners maximize their investment returns through strategic sales and market analysis.\",\n  \"to\": \"{{ $('Extract Message Data').item.json.contact_phone }}\"\n}"
+      },
+      "id": "d9f6a8b0-3c4d-5e6f-7890-1234cdefab56",
+      "name": "Send Identity Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 100]
+    },
+    {
+      "parameters": {
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"lead_id\": \"{{ $('Extract Message Data').item.json.lead_id }}\",\n  \"text\": \"I'm reaching out because I have qualified buyers looking for properties in your area. I wanted to see if you'd be open to discussing your property's potential sale value and market opportunities.\",\n  \"to\": \"{{ $('Extract Message Data').item.json.contact_phone }}\"\n}"
+      },
+      "id": "e0a7b9c1-4d5e-6f78-9012-3456defabc78",
+      "name": "Send Purpose Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"lead_id\": \"{{ $('Extract Message Data').item.json.lead_id }}\",\n  \"text\": \"Great! Thanks for confirming. I have some exciting opportunities that might interest you as a property owner.\",\n  \"to\": \"{{ $('Extract Message Data').item.json.contact_phone }}\"\n}"
+      },
+      "id": "f1b8ca2d-5e6f-7890-1234-5678efabcd90",
+      "name": "Send Yes Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"lead_id\": \"{{ $('Extract Message Data').item.json.lead_id }}\",\n  \"text\": \"I work with a network of qualified investors and buyers. I'm always evaluating properties for potential matches. Even if I don't have an immediate buyer, I can provide you with current market insights and help you understand your property's value in today's market.\",\n  \"to\": \"{{ $('Extract Message Data').item.json.contact_phone }}\"\n}"
+      },
+      "id": "02c9db3e-6f78-9012-3456-789abcdef123",
+      "name": "Send Buyer Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"status_id\": \"stat_prevsold\"\n}"
+      },
+      "id": "13daec4f-7890-1234-5678-90abcdef1245",
+      "name": "Update Lead - Sold",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"status_id\": \"stat_soft_no\"\n}"
+      },
+      "id": "24ebfd50-8901-2345-6789-01bcdef12356",
+      "name": "Update Lead - Soft No",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 600]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"status_id\": \"stat_not_interested\"\n}"
+      },
+      "id": "35fc0e61-9012-3456-789a-12cdef123467",
+      "name": "Update Lead - Not Interested",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 700]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Get Lead from Close').item.json.status_label }}",
+              "rightValue": "Relisted 1",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "460d1f72-0123-4567-89ab-23def1234578",
+      "name": "Check Relisted Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1200, 800]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"status_id\": \"stat_relisted_1\"\n}"
+      },
+      "id": "571e2083-1234-5678-9abc-34ef12345689",
+      "name": "Update to Relisted 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 780]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"status_id\": \"stat_relisted_2\"\n}"
+      },
+      "id": "682f3194-2345-6789-abcd-45f01234679a",
+      "name": "Update to Relisted 2", 
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 820]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Get Lead from Close').item.json.status_label }}",
+              "rightValue": "Under Contract",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "7930a5b5-3456-789a-bcde-560123456abc",
+      "name": "Check Under Contract Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1200, 900]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"status_id\": \"stat_under_contract\"\n}"
+      },
+      "id": "8a41b6c6-4567-89ab-cdef-67123456abcd",
+      "name": "Update to Under Contract 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 880]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"status_id\": \"stat_under_contract_2\"\n}"
+      },
+      "id": "9b52c7d7-5678-9abc-def0-78234567bcde",
+      "name": "Update to Under Contract 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 920]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Extract Message Data').item.json.current_workflow }}",
+              "rightValue": "FLBO 1|FLBO 2|FSBO 1|FSBO 2|Expired 1|Expired 2",
+              "operator": {
+                "type": "string",
+                "operation": "regex",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "ac63d8e8-6789-abcd-ef01-89345678cdef",
+      "name": "Check Workflow Resume",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1600, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "method": "PUT",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"custom.workflow_status\": \"resume\",\n  \"custom.workflow_paused\": \"false\"\n}"
+      },
+      "id": "bd74e9f9-789a-bcde-f012-9a456789def0",
+      "name": "Resume Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1800, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.close.com/api/v1/activity/note/",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "httpBasicAuth": {
+          "user": "api_1IbhBHUrx0bbwcIpPMVm1T.4702HXKtvpeRWgMkQXv0wF",
+          "password": ""
+        },
+        "sendBody": true,
+        "specifyContentType": true,
+        "contentType": "application/json",
+        "body": "={\n  \"lead_id\": \"{{ $('Extract Message Data').item.json.lead_id }}\",\n  \"note\": \"Automated Response Sent: {{ $('Extract Message Data').item.json.message_text }}\\nAction Taken: Message processed by automation workflow\",\n  \"date_created\": \"{{ new Date().toISOString() }}\"\n}"
+      },
+      "id": "ce85fa0a-89ab-cdef-0123-ab56789aef01",
+      "name": "Log Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 500]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "df960b1b-9abc-def0-1234-bc6789abef12",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2200, 500]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Message Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message Data": {
+      "main": [
+        [
+          {
+            "node": "Get Lead from Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Lead from Close": {
+      "main": [
+        [
+          {
+            "node": "Message Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Classification": {
+      "main": [
+        [
+          {
+            "node": "Send Identity Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Purpose Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Yes Template",
+            "type": "main",
+            "index": 0
+          }

@@ -1,0 +1,140 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "object": "Lead",
+        "trigger": "updated",
+        "fields": [
+          "Status",
+          "LeadSource",
+          "Name",
+          "Phone",
+          "Email"
+        ]
+      },
+      "name": "Salesforce Trigger",
+      "type": "n8n-nodes-base.salesforce",
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "to": "{{Phone}}",
+        "from": "+1234567890",
+        "url": "http://twilio.com/callhandler"
+      },
+      "name": "Twilio Call",
+      "type": "n8n-nodes-base.twilio",
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "to": "{{Phone}}",
+        "from": "+1234567890",
+        "url": "http://twilio.com/voicemailhandler"
+      },
+      "name": "Twilio Voicemail",
+      "type": "n8n-nodes-base.twilio",
+      "position": [
+        600,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "to": "{{Phone}}",
+        "from": "+1234567890",
+        "body": "Hi {{CustomerName}}, this is Kia from Iconic Mortgage. {{LoanOfficerName}} needs to connect with you about your mortgage inquiry. Please respond to schedule a quick 10-minute call."
+      },
+      "name": "Twilio SMS",
+      "type": "n8n-nodes-base.twilio",
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://cal.com/api/v1/availability/{{loanOfficerId}}"
+      },
+      "name": "Get Loan Officer Availability",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        800,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "to": "{{Phone}}",
+        "from": "+1234567890",
+        "body": "Thank you for your time. Here are 2-3 available times: [Option 1], [Option 2], [Option 3]. Please confirm your preferred time."
+      },
+      "name": "Send Time Options to Lead",
+      "type": "n8n-nodes-base.twilio",
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "sheetId": "your-sheet-id",
+        "range": "A1",
+        "valueInputOption": "RAW",
+        "values": [
+          [
+            "Lead",
+            "{{CustomerName}}",
+            "Phone",
+            "{{Phone}}",
+            "Attempt",
+            "1",
+            "Status",
+            "Attempted"
+          ]
+        ]
+      },
+      "name": "Log Call Attempts",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1000,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "to": "{{Phone}}",
+        "from": "+1234567890",
+        "body": "Hi {{CustomerName}}, this is Kia from Iconic Mortgage. This will be my final attempt to reach you regarding your mortgage application. Please call {{LoanOfficerPhone}} to move forward."
+      },
+      "name": "Final Voicemail",
+      "type": "n8n-nodes-base.twilio",
+      "position": [
+        1100,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "object": "Lead",
+        "id": "{{LeadID}}",
+        "updateFields": {
+          "Status": "Maximum Attempts Reached"
+        }
+      },
+      "name": "Update Salesforce Status",
+      "type": "n8n-nodes-base.salesforce",
+      "position": [
+        1200,
+        700
+      ]
+    }
+  ]
+}

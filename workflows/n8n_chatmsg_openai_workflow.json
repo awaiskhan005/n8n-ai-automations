@@ -1,0 +1,196 @@
+{
+  "name": "AI Agent with Memory and Tools",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Agent Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 400],
+      "webhookId": "ai-agent-trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "message-exists",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=conversation_{{ $json.userId || 'default' }}",
+        "options": {}
+      },
+      "id": "get-memory",
+      "name": "Retrieve Memory",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [680, 400],
+      "credentials": {
+        "redis": {
+          "id": "redis-credentials",
+          "name": "Redis Memory Store"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize conversation memory and context\nconst userId = $('Agent Input').first().json.userId || 'default';\nconst currentMessage = $('Agent Input').first().json.message;\nconst timestamp = new Date().toISOString();\n\n// Get existing conversation history\nlet conversationHistory = [];\ntry {\n  const memoryData = $input.first().json;\n  if (memoryData && typeof memoryData === 'string') {\n    conversationHistory = JSON.parse(memoryData);\n  } else if (Array.isArray(memoryData)) {\n    conversationHistory = memoryData;\n  }\n} catch (error) {\n  console.log('No existing memory or error parsing:', error);\n}\n\n// Add current message to history\nconversationHistory.push({\n  role: 'user',\n  content: currentMessage,\n  timestamp: timestamp\n});\n\n// Keep only last 10 exchanges to manage context window\nif (conversationHistory.length > 20) {\n  conversationHistory = conversationHistory.slice(-20);\n}\n\n// Analyze message intent\nconst intent = analyzeIntent(currentMessage);\n\nfunction analyzeIntent(message) {\n  const lowerMsg = message.toLowerCase();\n  \n  if (lowerMsg.includes('weather') || lowerMsg.includes('temperature') || lowerMsg.includes('forecast')) {\n    return 'weather';\n  }\n  if (lowerMsg.includes('search') || lowerMsg.includes('find') || lowerMsg.includes('look up')) {\n    return 'search';\n  }\n  if (lowerMsg.includes('calculate') || lowerMsg.includes('math') || /\\d+[+\\-*/]\\d+/.test(lowerMsg)) {\n    return 'calculation';\n  }\n  if (lowerMsg.includes('remind') || lowerMsg.includes('schedule') || lowerMsg.includes('appointment')) {\n    return 'reminder';\n  }\n  if (lowerMsg.includes('email') || lowerMsg.includes('send message')) {\n    return 'communication';\n  }\n  return 'conversation';\n}\n\nreturn {\n  userId: userId,\n  currentMessage: currentMessage,\n  conversationHistory: conversationHistory,\n  intent: intent,\n  timestamp: timestamp,\n  needsTools: intent !== 'conversation'\n};"
+      },
+      "id": "process-memory",
+      "name": "Process Memory & Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "needs-tools",
+              "leftValue": "={{ $json.needsTools }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "route-decision",
+      "name": "Needs Tools?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "weather-intent",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "weather",
+              "operator": {
+                "type": "string",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "weather-check",
+      "name": "Weather Request?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://api.openweathermap.org/data/2.5/weather?q={{ $('Agent Input').first().json.location || 'London' }}&appid=YOUR_WEATHER_API_KEY&units=metric",
+        "options": {}
+      },
+      "id": "weather-api",
+      "name": "Get Weather",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "calculation-intent",
+              "leftValue": "={{ $json.intent }}",
+              "rightValue": "calculation",
+              "operator": {
+                "type": "string",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "calculation-check",
+      "name": "Calculation Request?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple calculator for the AI agent\nconst message = $('Process Memory & Intent').first().json.currentMessage;\n\nfunction calculateExpression(expr) {\n  try {\n    // Extract mathematical expression\n    const mathPattern = /([0-9+\\-*/.() ]+)/g;\n    const matches = expr.match(mathPattern);\n    \n    if (matches && matches.length > 0) {\n      // Use Function constructor for safe evaluation (basic expressions only)\n      const sanitized = matches[0].replace(/[^0-9+\\-*/.() ]/g, '');\n      const result = Function('\"use strict\"; return (' + sanitized + ')')();\n      return {\n        expression: sanitized,\n        result: result,\n        success: true\n      };\n    }\n    return { success: false, error: 'No valid mathematical expression found' };\n  } catch (error) {\n    return { success: false, error: error.message };\n  }\n}\n\nconst calculation = calculateExpression(message);\n\nreturn {\n  toolResult: calculation,\n  toolType: 'calculation'\n};"
+      },
+      "id": "calculator-tool",
+      "name": "Calculator Tool",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge tool results back into the main flow\nconst memoryData = $('Process Memory & Intent').first().json;\nlet toolResult = null;\nlet toolType = null;\n\n// Check which tool was used\nif ($input.all().length > 0) {\n  const toolData = $input.first().json;\n  \n  // Weather tool result\n  if (toolData.weather) {\n    toolResult = {\n      location: toolData.name,\n      temperature: toolData.main.temp,\n      description: toolData.weather[0].description,\n      humidity: toolData.main.humidity\n    };\n    toolType = 'weather';\n  }\n  // Calculator tool result\n  else if (toolData.toolResult) {\n    toolResult = toolData.toolResult;\n    toolType = toolData.toolType;\n  }\n}\n\nreturn {\n  ...memoryData,\n  toolResult: toolResult,\n  toolType: toolType\n};"
+      },
+      "id": "merge-tools",
+      "name": "Merge Tool Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 400]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "gpt-4",
+        "messages": "={{ \n  const history = $json.conversationHistory || [];\n  const toolResult = $json.toolResult;\n  const toolType = $json.toolType;\n  \n  let systemPrompt = `You are an intelligent AI agent with access to tools and memory. You can:\n- Remember previous conversations\n- Use weather data when requested\n- Perform calculations\n- Provide helpful and contextual responses\n\nYou have a friendly, professional personality and always try to be helpful.`;\n\n  if (toolResult) {\n    if (toolType === 'weather') {\n      systemPrompt += `\\n\\nWeather data available: Location: ${toolResult.location}, Temperature: ${toolResult.temperature}°C, Conditions: ${toolResult.description}, Humidity: ${toolResult.humidity}%`;\n    } else if (toolType === 'calculation') {\n      systemPrompt += `\\n\\nCalculation result: ${toolResult.expression} = ${toolResult.result}`;\n    }\n  }\n\n  const messages = [\n    { role: 'system', content: systemPrompt }\n  ];\n  \n  // Add conversation history (last 10 exchanges)\n  const recentHistory = history.slice(-10);\n  messages.push(...recentHistory);\n  \n  return messages;\n}}",
+        "options": {\n          "temperature": 0.7,\n          "maxTokens": 800,\n          "presencePenalty": 0.1,\n          "frequencyPenalty": 0.1\n        }\n      },\n      "id": "ai-agent-response",\n      "name": "AI Agent Response",\n      "type": "n8n-nodes-base.openAi",\n      "typeVersion": 1,\n      "position": [2000, 400],\n      "credentials": {\n        "openAiApi": {\n          "id": "openai-credentials",\n          "name": "OpenAI API Key"\n        }\n      }\n    },\n    {\n      "parameters": {\n        "jsCode": "// Process AI response and update memory\nconst aiResponse = $input.first().json.choices[0].message.content;\nconst memoryData = $('Merge Tool Results').first().json;\nconst userId = memoryData.userId;\nconst timestamp = new Date().toISOString();\n\n// Add AI response to conversation history\nconst updatedHistory = [...memoryData.conversationHistory];\nupdatedHistory.push({\n  role: 'assistant',\n  content: aiResponse,\n  timestamp: timestamp,\n  toolUsed: memoryData.toolType || null\n});\n\n// Prepare response\nconst response = {\n  success: true,\n  message: aiResponse,\n  userId: userId,\n  timestamp: timestamp,\n  conversationId: `conversation_${userId}`,\n  toolUsed: memoryData.toolType,\n  tokensUsed: $input.first().json.usage?.total_tokens || 0,\n  intent: memoryData.intent\n};\n\nreturn {\n  response: response,\n  memoryKey: `conversation_${userId}`,\n  memoryValue: JSON.stringify(updatedHistory),\n  conversationHistory: updatedHistory\n};"
+      },\n      "id": "process-response",\n      "name": "Process Response",\n      "type": "n8n-nodes-base.code",\n      "typeVersion": 2,\n      "position": [2220, 400]\n    },\n    {\n      "parameters": {\n        "operation": "set",\n        "key": "={{ $json.memoryKey }}",\n        "value": "={{ $json.memoryValue }}",\n        "expire": true,\n        "ttl": 86400,\n        "options": {}\n      },\n      "id": "save-memory",\n      "name": "Save Memory",\n      "type": "n8n-nodes-base.redis",\n      "typeVersion": 1,\n      "position": [2440, 400],\n      "credentials": {\n        "redis": {\n          "id": "redis-credentials",\n          "name": "Redis Memory Store"\n        }\n      }\n    },\n    {\n      "parameters": {\n        "respondWith": "json",\n        "responseBody": "={{ $('Process Response').first().json.response }}"\n      },\n      "id": "agent-response",\n      "name": "Agent Response",\n      "type": "n8n-nodes-base.respondToWebhook",\n      "typeVersion": 1,\n      "position": [2660, 400]\n    },\n    {\n      "parameters": {\n        "respondWith": "json",\n        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Invalid input. Please provide a message.\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",\n        "options": {\n          "responseCode": 400\n        }\n      },\n      "id": "error-response",\n      "name": "Error Response",\n      "type": "n8n-nodes-base.respondToWebhook",\n      "typeVersion": 1,\n      "position": [460, 600]\n    }\n  ],\n  "connections": {\n    "Agent Input": {\n      "main": [\n        [\n          {\n            "node": "Validate Input",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Validate Input": {\n      "main": [\n        [\n          {\n            "node": "Retrieve Memory",\n            "type": "main",\n            "index": 0\n          }\n        ],\n        [\n          {\n            "node": "Error Response",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Retrieve Memory": {\n      "main": [\n        [\n          {\n            "node": "Process Memory & Intent",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Process Memory & Intent": {\n      "main": [\n        [\n          {\n            "node": "Needs Tools?",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Needs Tools?": {\n      "main": [\n        [\n          {\n            "node": "Weather Request?",\n            "type": "main",\n            "index": 0\n          },\n          {\n            "node": "Calculation Request?",\n            "type": "main",\n            "index": 0\n          }\n        ],\n        [\n          {\n            "node": "Merge Tool Results",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Weather Request?": {\n      "main": [\n        [\n          {\n            "node": "Get Weather",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Get Weather": {\n      "main": [\n        [\n          {\n            "node": "Merge Tool Results",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Calculation Request?": {\n      "main": [\n        [\n          {\n            "node": "Calculator Tool",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Calculator Tool": {\n      "main": [\n        [\n          {\n            "node": "Merge Tool Results",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Merge Tool Results": {\n      "main": [\n        [\n          {\n            "node": "AI Agent Response",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "AI Agent Response": {\n      "main": [\n        [\n          {\n            "node": "Process Response",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Process Response": {\n      "main": [\n        [\n          {\n            "node": "Save Memory",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    },\n    "Save Memory": {\n      "main": [\n        [\n          {\n            "node": "Agent Response",\n            "type": "main",\n            "index": 0\n          }\n        ]\n      ]\n    }\n  },\n  "settings": {\n    "executionOrder": "v1"\n  }\n}

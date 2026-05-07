@@ -1,0 +1,1131 @@
+{
+  "name": "Close CRM Automation Tory",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "text-response",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a04a7f61-f91a-4b66-a852-31ec2a0ef583",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1360,
+        192
+      ],
+      "webhookId": "c94333ce-a921-48e7-8106-d881ba0e1c67"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "contact_phone",
+              "name": "contact_phone",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "message_text",
+              "name": "message_text",
+              "value": "={{ $json.body.toLowerCase().trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "lead_id",
+              "name": "lead_id",
+              "value": "={{ $json.lead_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "current_workflow",
+              "name": "current_workflow",
+              "value": "={{ $json.current_workflow || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "current_lead_status",
+              "name": "current_lead_status",
+              "value": "={{ $json.current_lead_status || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "78990734-e222-446b-bcbb-4122318c7860",
+      "name": "Extract Message Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "id": "adff770d-1825-440b-a3db-c95848716c32",
+      "name": "Get Lead from Close",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -928,
+        192
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "who is this|what company|who are you|who do you work for",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "identity_question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "what do you want|how can i help|what's up|what's this about|what do you need",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "purpose_question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "^(yes|yep|i own|maybe.*what.*want|how can i help)",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmation_response"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "sold.*property|no longer own|i sold it|it's sold|we sold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "property_sold"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "not interested.*selling|not selling|not for sale|just looking.*tenant|just leasing|never had.*for sale",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "soft_no"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "selling.*ourselves|don't work with brokers|bring.*buyer.*pay|if you bring.*buyer|not looking to list|go sell it then|pay you.*buyer.*bring",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "not_interested_broker"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "already working.*broker|property is listed|talk to.*agent|have a broker|already listed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "already_listed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "under contract|in due diligence|in escrow|scheduled.*close|contract signed|closing soon",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "under_contract"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "do you have.*buyer|you have someone.*wants.*buy|represent.*buyer|have.*buyer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "buyer_question"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract Message Data').item.json.message_text }}",
+                    "rightValue": "interest.*selling|yes please call|want to talk|call me",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "wants_to_talk"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "93a5b101-2d07-4a14-95c0-a240d2bebfec",
+      "name": "Message Classification",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -704,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "43668018-01e1-4930-a2c0-917a8c3babdf",
+      "name": "Send Identity Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        -16
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "44fd2c97-f495-4c4a-bc61-1735646da81b",
+      "name": "Send Yes Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        192
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "2709e7f2-2a7e-4359-bf1a-803a3f5b1c5f",
+      "name": "Send Buyer Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        288
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "2cbf4a9b-11b9-4b3b-9a79-da317536102d",
+      "name": "Update Lead - Sold",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        384
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "000fe48f-baf0-4c0d-acd8-9ccbb4f4f472",
+      "name": "Update Lead - Soft No",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        496
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "23de8457-be2c-4f9a-80f9-66c478564fb4",
+      "name": "Update Lead - Not Interested",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -624,
+        624
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Get Lead from Close').item.json.status_label }}",
+              "rightValue": "Relisted 1",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "54c83ca1-b05b-4e2f-bfec-9bd96a53a257",
+      "name": "Check Relisted Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "644e2da5-3cd6-4bf8-b3a7-af6f4ed6b0aa",
+      "name": "Update to Relisted 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        656
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "d4630b64-cc8d-4279-8464-800f6186fc0c",
+      "name": "Update to Relisted 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        608
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Get Lead from Close').item.json.status_label }}",
+              "rightValue": "Under Contract",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2b871073-3e64-4f9d-808c-3dd01aeaaae0",
+      "name": "Check Under Contract Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "5d62a255-0f21-4288-a92b-5a2b12f52ecd",
+      "name": "Update to Under Contract 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        48,
+        736
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "b808ee3d-f682-4f12-bf0e-b8a31496f4a8",
+      "name": "Update to Under Contract 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -48,
+        864
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Extract Message Data').item.json.current_workflow }}",
+              "rightValue": "FLBO 1|FLBO 2|FSBO 1|FSBO 2|Expired 1|Expired 2",
+              "operator": {
+                "type": "string",
+                "operation": "regex",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "465bf77f-00dc-4f4f-86ce-f38d32b4a810",
+      "name": "Check Workflow Resume",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.close.com/api/v1/lead/{{ $('Extract Message Data').item.json.lead_id }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "f0c645c5-d6c0-4a15-aab3-d4c1c299ef07",
+      "name": "Resume Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        192
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.close.com/api/v1/activity/note/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "b52b1302-7005-4def-b52b-135d064091cf",
+      "name": "Log Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        384
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "52b59021-f971-4209-b4f4-fc43c5177c31",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.close.com/api/v1/activity/sms/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f8ecc9c-31f7-458e-b0c0-159eecb4485c",
+      "name": "Send Purpose Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        96
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "wPhTuMkrWRkT8Pkv",
+          "name": "Unnamed credential"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Message Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message Data": {
+      "main": [
+        [
+          {
+            "node": "Get Lead from Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Lead from Close": {
+      "main": [
+        [
+          {
+            "node": "Message Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Classification": {
+      "main": [
+        [
+          {
+            "node": "Send Identity Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Purpose Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Yes Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Lead - Sold",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Lead - Soft No",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Lead - Not Interested",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Relisted Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Under Contract Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Buyer Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Identity Template": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Yes Template": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Buyer Template": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead - Sold": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead - Soft No": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead - Not Interested": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Relisted Status": {
+      "main": [
+        [
+          {
+            "node": "Update to Relisted 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update to Relisted 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Under Contract Status": {
+      "main": [
+        [
+          {
+            "node": "Update to Under Contract 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update to Under Contract 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update to Relisted 1": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update to Relisted 2": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update to Under Contract 1": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update to Under Contract 2": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Workflow Resume": {
+      "main": [
+        [
+          {
+            "node": "Resume Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resume Workflow": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Activity": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Purpose Template": {
+      "main": [
+        [
+          {
+            "node": "Check Workflow Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3edc26d4-6cb2-48de-94e4-602da9d39d7b",
+  "meta": {
+    "instanceId": "2f7c2d69842afbb824a1f057f29bba666469275c3628596867a89d4bfefc0a20"
+  },
+  "id": "MCeKCz77fdKF7XyK",
+  "tags": []
+}

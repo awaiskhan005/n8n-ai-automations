@@ -1,0 +1,258 @@
+{
+  "name": "Linkdinn AI agent automation",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Post creator",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Post topic "
+            },
+            {
+              "fieldLabel": "Target audiance "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        -48
+      ],
+      "id": "a9b24ccb-8030-4254-bda0-3cd640a78cfa",
+      "name": "On form submission",
+      "webhookId": "2ac997ca-5106-41c5-8371-7d22bfca9fb5"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        112,
+        176
+      ],
+      "id": "08410c08-4b92-4513-aede-a4b90f9ec643",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "RS2NLdvbOuw0owNZ",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"AI techonolgy\",\n  \"auto_parameters\": false,\n  \"topic\": \"general\",\n  \"search_depth\": \"basic\",\n  \"chunks_per_source\": 3,\n  \"max_results\": 1,\n  \"time_range\": null,\n  \"days\": 7,\n  \"start_date\": \"2025-02-09\",\n  \"end_date\": \"2000-01-28\",\n  \"include_answer\": true,\n  \"include_raw_content\": true,\n  \"include_images\": false,\n  \"include_image_descriptions\": false,\n  \"include_favicon\": false,\n  \"include_domains\": [],\n  \"exclude_domains\": [],\n  \"country\": null\n}",
+        "options": {},
+        "optimizeResponse": true
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -112,
+        192
+      ],
+      "id": "66b1df28-0484-47f6-b26b-19a95bc6a5f8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Topics of research:{{ $json['Post topic '] }}\nTarget audiance:{{ $json['Target audiance '] }}",
+        "options": {
+          "systemMessage": "## Overview\nYou are an Al agent specialized in creating professional, educational, and engaging LinkedIn posts based on any topic provided by the user.\nAlways begin by conducting a real-tise search using the Tavily tool to gather the sost accurate, up-to-date information on the topic. The post should be written to appeal to the provided target audience.\nBased on your research, generote o well-structured Linkedin post that:\n- Starts with an engaging hook\n- Clear and easy to read\n- Educational and insightful\n• Light on emojis (use only when highly relevant and mininal)\n- Includes proper source attribution (e.t..\nreccording to [source]\")\n- Contains relevant hashtags to improve visibility\n• Ends with a clear call to action (e.e, asking for thoughts, feedback, or shares) an Output Instructions\n- Your ONLY output should be the final Linkedin post text.\n- Do not include explanations, notes, or anything beyond the post itself.\n* Example Workflow\n1. Receive a topic (e-f-, \"The ROI of warehouse automation* )\n2. Use Tavily to search and gether recent information or case studies\n3. Draft & Linkedin post using that research\n4. format it with source citations, eleen structure, optional hashtags, and a call to action."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -48
+      ],
+      "id": "0318c6a3-b1a4-44f6-aba1-c18e8c37c019",
+      "name": "Research agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Lindinn post :",
+        "options": {
+          "systemMessage": "#OvEPview\nYou are en Al agent that transforms LinkedIn posts into visual prompt descriptions for generating grephic earketing materials. These visuals are designed to be paired with the post on Linkedin, helping consunicate the nessage in a visually engaging, brand-aligned way.\n##Objective\n- Read and analyze the given Linkedin post.\n- Identify the main messoge, insight, or takeday fron the post.\n- Create a clear and coopelling graphic prompt that con be used with a tert-to-irage generator.\n- The result should be a marketing-style grophic - not e literal scene or hyperrealistic photo - that:\n1) Visually supports or illustrates the key idea of the post\n2) Looks appropriate for use in a professional LinkedIn feed\n3) Feels polished, modern, and engeging\n0 Output Instructions\n- Output only the final image prompt. Do not output quotation marks.\n- Do not repeat or rephrase the Linkedin post.\n• Do not add any explanations or extra content - just the image prompt.\n• Never leave things blank like wHeader aren reserved for custonizable callout text\" I\n- Output numeric stats when available in the original post\nan Style Guidelines\n- Think like a brand designer or marketing creative.\n- Visuals say include: text, charts, icons, abstract shapes, overlays, modern illustrations, notion-like effects, bold typography elements (described, not rendered), or metaphorical concepts.\n- You can mention loyout suggestions (e.., split screen design, \"header with bold title and subtle background illustration*).\n- Assume the output will be generated using AI image tools - your prompt should guide those tools effectively.\n春 EXAMple Prompt Foreat\nA modern flat-style graphic showing • human brain connected to mechanical gears, representing the fusion of Al and automation.\nMinimlist background, soft gradients, clean sans-serif text placerent space at the top."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        192,
+        -48
+      ],
+      "id": "636d8d4f-027d-4db6-9c40-8a7b13dd7b49",
+      "name": "Image agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        -48
+      ],
+      "id": "d00ef4ac-7cac-4ce8-b37a-53598cf7b508",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        -48
+      ],
+      "id": "59ee3286-857b-45a1-ba81-a6c734fa2576",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -48
+      ],
+      "id": "99ceb4e7-fb2a-4dbc-a5be-8dcf3117fba4",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "98vIKwxkGweROBsu",
+          "name": "LinkedIn account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Research agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Image agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research agent": {
+      "main": [
+        [
+          {
+            "node": "Image agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "aa30941c-a4a5-4666-9bac-651214f121cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4245c990d0aeb2dd533063cc4f3bc5c4ce3d653c5c6abd7b2213243e028fe11a"
+  },
+  "id": "WcDQCoClYAdYaS2c",
+  "tags": []
+}

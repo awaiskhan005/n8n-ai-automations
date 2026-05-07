@@ -1,0 +1,274 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c095759b-c4f7-4fd0-a687-295aef397be9",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eoniLQm02gg5dAdt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "\n[image: Google]\\nn8n.cloud was granted access to your Google Account\\n\\n\\nawaisdero15@gmail.com\\n\\nIf you did not grant access, you should check this activity and secure your\\naccount.\\nCheck activity\\n<https://accounts.google.com/AccountChooser?Email=awaisdero15@gmail.com&continue=https://myaccount.google.com/alert/nt/1746178143000?rfn%3D127%26rfnc%3D1%26eid%3D-115868112433488201%26et%3D0>\\nYou can also see security activity at\\nhttps://myaccount.google.com/notifications\\nYou received this email to let you know about important changes to your\\nGoogle Account and services.\\n© 2025 Google LLC, 1600 Amphithea...",
+        "categories": {
+          "categories": [
+            {
+              "category": "Sponsership",
+              "description": "it i will be youtube sponserships and deals"
+            },
+            {
+              "category": "high priority ",
+              "description": "urgent time deadlines emails"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "ab58bea4-90e5-4d67-9824-e8f4837ec63c",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        220
+      ],
+      "id": "c1e27c87-e67b-4499-8798-d1d4bf0f9fd8",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "vt7AYtzZ0rBAWGrR",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "you are an asssitant of a youtuber named as awais khan ",
+              "role": "system"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        580,
+        -100
+      ],
+      "id": "82197c2b-4b61-4478-b49d-09208e2d5661",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "vt7AYtzZ0rBAWGrR",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "hello world",
+        "message": "ok",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        -100
+      ],
+      "id": "75afb5a2-8f1c-4a9b-a813-38f33b09d74e",
+      "name": "Gmail",
+      "webhookId": "d6c00370-950d-4be0-bf80-e9d2135582fb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eoniLQm02gg5dAdt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "you are an assistant youur job is to respond to following ghigh priority email",
+              "role": "system"
+            }
+          ]
+        },
+        "simplify": false,
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        580,
+        100
+      ],
+      "id": "55dcdb06-3d95-4f4b-933d-d44b14991440",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "vt7AYtzZ0rBAWGrR",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "hello world",
+        "message": "do it",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        940,
+        100
+      ],
+      "id": "77e61353-27f7-4f47-944b-f7d636c664ad",
+      "name": "Gmail1",
+      "webhookId": "8e994126-eee5-4c74-92e1-8e9c85449242",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eoniLQm02gg5dAdt",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7143d82-d4f6-4248-98a6-455dd0e3101d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4af6da895d15a822c5b80d4f2a9c14419d5c27358597fed901eea448b68a089d"
+  },
+  "id": "DZ00XQl1iuGtxAru",
+  "tags": []
+}

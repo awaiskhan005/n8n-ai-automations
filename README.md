@@ -97,9 +97,13 @@ n8n-ai-automations/
 - **Apify** - Web scraping
 - **LinkedIn** - Social media automation
 - **YouTube** - Video content automation
-  **Claude**
+  
+-  **Claude**
+  
   **ELeven Labs**
+  
   **Retell AI**
+  
   **Python**
   **Phantom buster**
   **Instantly**

@@ -97,17 +97,17 @@ n8n-ai-automations/
 - **Apify** - Web scraping
 - **LinkedIn** - Social media automation
 - **YouTube** - Video content automation
-  Claude
-  ELeven Labs
-  Retell AI
-  Python
-  Phantom buster
-  Instantly
-  SQL posgrss
-  Pinceone Database
-  Twilio
-  Justcall
-  RIng Central
+  **Claude**
+  **ELeven Labs**
+  **Retell AI**
+  **Python**
+  **Phantom buster**
+  **Instantly**
+  **SQL posgrss**
+  **Pinceone Database**
+  **Twilio**
+  **Justcall**
+  **RIng Central**
   
   
 ## Author

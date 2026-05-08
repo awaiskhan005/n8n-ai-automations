@@ -100,18 +100,25 @@ n8n-ai-automations/
   
 -  **Claude**
   
-  **ELeven Labs**
+ - **ELeven Labs**
   
-  **Retell AI**
+-  **Retell AI**
   
-  **Python**
-  **Phantom buster**
-  **Instantly**
-  **SQL posgrss**
-  **Pinceone Database**
-  **Twilio**
-  **Justcall**
-  **RIng Central**
+ - **Python**
+  
+ - **Phantom buster**
+  
+ - **Instantly**
+  
+ - **SQL posgrss**
+  
+ - **Pinceone Database**
+  
+ - **Twilio**
+  
+ - **Justcall**
+  
+ - **RIng Central**
   
   
 ## Author

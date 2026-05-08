@@ -1,4 +1,4 @@
-# n8n AI Automations
+# n8n AI Automations BY AWAIS KHAN (AI DEVELOPER, AUTOMATION ENGINEER)
 
 A collection of n8n workflow automations built for AI-powered business processes, CRM integrations, lead generation, and intelligent chatbots.
 

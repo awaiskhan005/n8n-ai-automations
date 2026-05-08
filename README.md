@@ -15,8 +15,10 @@ A collection of n8n workflow automations built for AI-powered business processes
 | `close_crm_workflow 1 .json` | Close CRM workflow variant |
 | `fixed_close_workflow.json` | Fixed/improved Close CRM automation |
 | `n8n_close_crm_workflow.json` | n8n-native Close CRM integration |
-<img width="1367" height="606" alt="Salesforce CRM Automation - Copy" src="https://github.com/user-attachments/assets/1bb4c0fa-b3e1-4923-ab58-feebdaf77952" />
-<img width="1367" height="606" alt="Salesforce CRM Automation - Copy" src="https://github.com/user-attachments/assets/ecc6da56-40e4-49d0-ae7e-e8180bc39edd" />
+<img width="1386" height="476" alt="AI Agent for Multi Lead Generation and Outreach" src="https://github.com/user-attachments/assets/0d1289ea-d637-4a3e-8d24-322712a71367" />
+
+<img width="1473" height="777" alt="CRM AI AGENT FOR CALL SMS" src="https://github.com/user-attachments/assets/669f4536-705e-4291-8af3-c7f129f6b8e3" />
+
 
 ### AI Agents & Chatbots
 | Workflow | Description |
@@ -41,7 +43,7 @@ A collection of n8n workflow automations built for AI-powered business processes
 |----------|-------------|
 | `Automate Call Scheduling with Voice AI Receptionist using Vapi, Google Calendar & Airtable.json` | Voice AI receptionist for call scheduling with Vapi, Google Calendar, and Airtable integration |
 <img width="1413" height="671" alt="AI Agent for Hotel using Vapi" src="https://github.com/user-attachments/assets/28912bbf-a5e6-4c09-9819-be1d901e4da7" />
-<img width="1473" height="777" alt="LEad calling" src="https://github.com/user-attachments/assets/66b3e535-663c-4a63-a84b-30ea1f47c43e" />
+
 
 ### General Workflows
 | Workflow | Description |

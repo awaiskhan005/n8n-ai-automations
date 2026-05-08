@@ -3,9 +3,9 @@
 A collection of n8n workflow automations built for AI-powered business processes, CRM integrations, lead generation, and intelligent chatbots.
 
 ## Workflows
-<img width="1473" height="777" alt="LEad calling - Copy" src="https://github.com/user-attachments/assets/e20bdbf3-bf70-47c5-9547-3b3a3eb2a940" />
 
-### CRM & Sales Automation
+
+### GHL / Salesfroce CRM & Sales Automation
 | Workflow | Description |
 |----------|-------------|
 | `iconic-mortgage-workflow.json` | AI Hot Lead Follow-Up system for Iconic Mortgage using Salesforce triggers |
@@ -15,6 +15,8 @@ A collection of n8n workflow automations built for AI-powered business processes
 | `close_crm_workflow 1 .json` | Close CRM workflow variant |
 | `fixed_close_workflow.json` | Fixed/improved Close CRM automation |
 | `n8n_close_crm_workflow.json` | n8n-native Close CRM integration |
+<img width="1367" height="606" alt="Salesforce CRM Automation - Copy" src="https://github.com/user-attachments/assets/1bb4c0fa-b3e1-4923-ab58-feebdaf77952" />
+<img width="1367" height="606" alt="Salesforce CRM Automation - Copy" src="https://github.com/user-attachments/assets/ecc6da56-40e4-49d0-ae7e-e8180bc39edd" />
 
 ### AI Agents & Chatbots
 | Workflow | Description |
@@ -24,6 +26,7 @@ A collection of n8n workflow automations built for AI-powered business processes
 | `Web Browsing AI agent Chatbot.json` | AI chatbot with web browsing capabilities |
 | `RAG_Website_Chatbot.json` | RAG-based website chatbot using LangChain nodes |
 | `n8n_chatmsg_openai_workflow.json` | Chat messaging workflow powered by OpenAI |
+<img width="1488" height="611" alt="AI RAG agent for restaurant support" src="https://github.com/user-attachments/assets/c36e59d9-d98d-4bf2-8e09-c45b7c57952a" />
 
 ### Lead Generation & Outreach
 | Workflow | Description |
@@ -31,17 +34,22 @@ A collection of n8n workflow automations built for AI-powered business processes
 | `Business Lead Generation with Apify Web Scraping and Google Sheets Storage.json` | Web scraping leads with Apify and storing in Google Sheets |
 | `AI hot_lead_follow_up_workflow.json` | AI-powered hot lead follow-up automation |
 | `Email Sending Agent automation.json` | Automated email sending agent for outreach |
+<img width="1386" height="476" alt="AI Agent for Multi Lead Generation and Outreach" src="https://github.com/user-attachments/assets/d332e186-aa03-4ace-8e4e-ea076fe6621f" />
 
 ### Voice AI & Scheduling
 | Workflow | Description |
 |----------|-------------|
 | `Automate Call Scheduling with Voice AI Receptionist using Vapi, Google Calendar & Airtable.json` | Voice AI receptionist for call scheduling with Vapi, Google Calendar, and Airtable integration |
+<img width="1413" height="671" alt="AI Agent for Hotel using Vapi" src="https://github.com/user-attachments/assets/28912bbf-a5e6-4c09-9819-be1d901e4da7" />
+<img width="1473" height="777" alt="LEad calling" src="https://github.com/user-attachments/assets/66b3e535-663c-4a63-a84b-30ea1f47c43e" />
 
 ### General Workflows
 | Workflow | Description |
 |----------|-------------|
 | `My_workflow_2.json` | General-purpose n8n workflow |
 | `n8n_workflow.json` | Base n8n workflow template |
+<img width="1304" height="774" alt="SEO AUtomation" src="https://github.com/user-attachments/assets/9ce31aa0-d303-4cc4-9bff-0a8a32cb9f97" />
+
 
 ## Project Structure
 

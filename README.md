@@ -3,6 +3,7 @@
 A collection of n8n workflow automations built for AI-powered business processes, CRM integrations, lead generation, and intelligent chatbots.
 
 ## Workflows
+<img width="1473" height="777" alt="LEad calling - Copy" src="https://github.com/user-attachments/assets/e20bdbf3-bf70-47c5-9547-3b3a3eb2a940" />
 
 ### CRM & Sales Automation
 | Workflow | Description |

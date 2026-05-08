@@ -88,7 +88,7 @@ n8n-ai-automations/
 
 - **n8n** - Workflow automation platform
 - **OpenAI / LangChain** - AI/LLM capabilities
-- **Salesforce** - CRM triggers and lead management
+- **Salesforce and GO Hgih Level GHL** - CRM triggers and lead management
 - **Close CRM** - Sales pipeline automation
 - **Google Sheets** - Data storage
 - **Google Calendar** - Scheduling
@@ -97,7 +97,19 @@ n8n-ai-automations/
 - **Apify** - Web scraping
 - **LinkedIn** - Social media automation
 - **YouTube** - Video content automation
-
+  Claude
+  ELeven Labs
+  Retell AI
+  Python
+  Phantom buster
+  Instantly
+  SQL posgrss
+  Pinceone Database
+  Twilio
+  Justcall
+  RIng Central
+  
+  
 ## Author
 
 **Awais Khan**  
